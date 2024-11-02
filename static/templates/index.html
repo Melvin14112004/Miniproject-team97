@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Recommendation System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Product Recommendation System</h1>
+        <div class="input-group">
+            <input type="text" id="product-name" placeholder="Enter product name" title="Enter the name of the product">
+            <button onclick="analyzeReview()" title="Click to analyze the product review">
+                <i class="fas fa-search"></i> Analyze
+            </button>
+        </div>
+
+        <div id="loading" class="loading">Analyzing, please wait...</div>
+        <div id="result-container" class="result-container">
+            <div id="result"></div>
+            <div id="rating"></div>
+        </div>
+
+        <h2>Submit Your Review</h2>
+        <form id="review-form">
+            <input type="text" id="review-text" placeholder="Enter your review" title="Enter your review for the product" required>
+            <input type="number" id="rating-input" min="1" max="5" placeholder="Rating (1-5)" title="Rate the product from 1 to 5" required>
+            <input type="file" id="audio-file" accept="audio/*" title="Upload an audio file for your review">
+            <button type="submit" title="Click to submit your review">Submit Review</button>
+        </form>
+
+        <h2>Submit Feedback</h2>
+        <form id="feedback-form">
+            <textarea id="feedback-text" placeholder="Enter your feedback" title="Provide your feedback about the product" required></textarea>
+            <button type="submit" title="Click to submit your feedback">Submit Feedback</button>
+        </form>
+    </div>
+
+    <script>
+        
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("result-container").style.display = "none";
+
+        function analyzeReview() {
+            const productName = document.getElementById("product-name").value;
+            document.getElementById("loading").style.display = "block";
+
+            fetch("/analyze", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ product_name: productName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("result-container").style.display = "block";
+
+                if (data.error) {
+                    document.getElementById("result").textContent = data.error;
+                    document.getElementById("rating").textContent = "";
+                } else {
+                    document.getElementById("result").textContent = data.sentiment_message;
+                    document.getElementById("rating").textContent = "Rating: " + data.rating;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("result").textContent = "An error occurred during analysis.";
+            });
+        }
+
+        document.getElementById("review-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const reviewText = document.getElementById("review-text").value;
+            const rating = document.getElementById("rating-input").value;
+            const audioFile = document.getElementById("audio-file").files[0];
+
+            const formData = new FormData();
+            formData.append("audio_file", audioFile);
+
+            fetch("/upload_audio", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    const audioFilePath = data.audio_file_path;
+                    submitReview(reviewText, rating, audioFilePath);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred while uploading the audio file.");
+            });
+        });
+
+        function submitReview(reviewText, rating, audioFilePath) {
+            fetch("/submit_review", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    product_name: document.getElementById("product-name").value,
+                    review_text: reviewText,
+                    audio_file_path: audioFilePath,
+                    rating: rating
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred while submitting the review.");
+            });
+        }
+        
+        document.getElementById("feedback-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const feedbackText = document.getElementById("feedback-text").value;
+
+            fetch("/submit_feedback", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ feedback_text: feedbackText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert(data.message);
+                    document.getElementById("feedback-text").value = "";
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred while submitting the feedback.");
+            });
+            
+        });
+    </script>
+    <script>
+        document.getElementById("product-name").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                analyzeReview();
+            }
+        });
+    </script>
+</body>
+</html>
