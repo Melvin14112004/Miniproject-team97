@@ -37,7 +37,7 @@ The **Product Review and Sentiment Analysis System** is a project designed to an
 
 ![alt text](img/a.png)
 
-####  Sentiment Analysis Results  
+####  Sentiment Analysis Results.
 
 ![alt text](img/2.png)
  
