@@ -1,6 +1,5 @@
 ## Title of the Project
-Product Review and Sentiment Analysis System  
-The integration of text and audio review analysis for businesses, aimed at understanding customer feedback and improving overall product satisfaction.
+The Product Review and Sentiment Analysis System is a web-based application that allows users to analyze the sentiment of product reviews and ratings based on both textual and audio inputs. This system utilizes state-of-the-art natural language processing (NLP) and speech recognition techniques to provide insights into customer feedback, enabling businesses to improve their products and services.
 
 ## About
 <!--Detailed Description about the project-->  
